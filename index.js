@@ -2,11 +2,24 @@ const express = require("express");
 const urlRoute = require("./routes/url");
 const { connectToMongoDB } = require("./connect");
 const URL = require("./models/url");
+const path = require("path");
+const staticRouter = require("./routes/staticRouter");
 
 const app = express();
 const PORT = 8000;
 
-app.use(express.json()); //middleware
+//middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use("/", staticRouter);
+
+app.get("/test", async (req, res) => {
+  const allUrls = await URL.find({});
+  return res.render("home", {
+    urls: allUrls, //extra data to be passed to the view
+  });
+});
 
 connectToMongoDB("mongodb://localhost:27017/url-shortener")
   .then(() => {
@@ -15,6 +28,10 @@ connectToMongoDB("mongodb://localhost:27017/url-shortener")
   .catch((err) => {
     console.error(err);
   });
+
+// Set view engine
+app.set("view engine", "ejs");
+app.set("views", path.resolve("./views"));
 
 app.use("/url", urlRoute);
 
