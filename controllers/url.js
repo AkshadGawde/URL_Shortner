@@ -7,17 +7,31 @@ async function handleGenerateNewShortURL(req, res) {
     return res.status(400).json({ error: "URL is required" });
   }
 
-  const shortID = shortid.generate();
+  const shortID = shortid.generate().slice(0, 2);
+  try {
+    const newUrl = await Url.create({
+      shortId: shortID,
+      redirectedUrl: body.url,
+      visitHistory: [],
+    });
 
-  await Url.create({
-    shortId: shortID,
-    redirectedUrl: body.url,
-    visitHistory: [],
+    return res.json({ id: newUrl.shortId });
+  } catch (error) {
+    console.error("Error creating short URL:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+async function handleGetAnalytics(req, res) {
+  const shortId = req.params.shortId;
+  const result = await URL.findOne({ shortId }); //DB query
+  return res.json({
+    totalClicks: result.visitHistory.length,
+    analytics: result.visitHistory,
   });
-
-  res.json({ id: shortID });
 }
 
 module.exports = {
   handleGenerateNewShortURL,
+  handleGetAnalytics,
 };
