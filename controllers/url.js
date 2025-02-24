@@ -2,22 +2,20 @@ const shortid = require("shortid");
 const Url = require("../models/url");
 
 async function handleGenerateNewShortURL(req, res) {
-  const body = req.body;
-  if (!body.url) {
+  const { url } = req.body;
+  if (!url) {
     return res.status(400).json({ error: "URL is required" });
   }
 
-  const shortID = shortid.generate().slice(0, 2);
+  const shortid = shortid.generate().slice(0, 2);
   try {
     const newUrl = await Url.create({
-      shortId: shortID,
-      redirectedUrl: body.url,
+      shortid: shortid,
+      redirectUrl: url,
       visitHistory: [],
     });
-    return res.render("home", {
-      id: shortID,
-    });
-    return res.json({ id: shortID });
+
+    return res.json({ id: shortid, message: "Short URL created successfully" });
   } catch (error) {
     console.error("Error creating short URL:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -25,12 +23,22 @@ async function handleGenerateNewShortURL(req, res) {
 }
 
 async function handleGetAnalytics(req, res) {
-  const shortId = req.params.shortId;
-  const result = await URL.findOne({ shortId }); //DB query
-  return res.json({
-    totalClicks: result.visitHistory.length,
-    analytics: result.visitHistory,
-  });
+  try {
+    const { shortid } = req.params;
+    const result = await Url.findOne({ shortid });
+
+    if (!result) {
+      return res.status(404).json({ error: "Short URL not found" });
+    }
+
+    return res.json({
+      totalClicks: result.visitHistory.length,
+      analytics: result.visitHistory,
+    });
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 }
 
 module.exports = {

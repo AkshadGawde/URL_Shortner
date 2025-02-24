@@ -17,10 +17,10 @@ router.post("/url", async (req, res) => {
     const { url } = req.body;
 
     // Generate a short ID (you can use nanoid or a hash function)
-    const shortID = Math.random().toString(36).substring(2, 8);
+    const shortid = Math.random().toString(36).substring(2, 4);
 
     const newUrl = new URL({
-      shortID,
+      shortid,
       redirectUrl: url,
       visitHistory: [],
     });
@@ -34,9 +34,9 @@ router.post("/url", async (req, res) => {
   }
 });
 
-router.get("/:shortID", async (req, res) => {
+router.get("/:shortid", async (req, res) => {
   try {
-    const urlData = await URL.findOne({ shortID: req.params.shortID });
+    const urlData = await URL.findOne({ shortid: req.params.shortid });
 
     if (!urlData) {
       return res.status(404).send("URL Not Found");
